@@ -105,8 +105,8 @@ class UnivariateGaussian:
 		log_likelihood: float
 			log-likelihood calculated
 		"""
-		return -np.log(2 * np.pi * sigma) * X.size / 2 - np.sum(
-			X - mu) / 2 * sigma
+		return -np.log(2 * np.pi * sigma) * X.size / 2 \
+			   - np.sum(np.power(X - mu, 2)) / (2 * sigma)
 
 
 class MultivariateGaussian:
