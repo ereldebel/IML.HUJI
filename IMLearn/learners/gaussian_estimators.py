@@ -8,7 +8,7 @@ class UnivariateGaussian:
 	Class for univariate Gaussian Distribution Estimator
 	"""
 
-	def __init__(self, biased_var: bool = False) -> UnivariateGaussian:
+	def __init__(self, biased_var: bool = False) -> None:
 		"""
 		Estimator for univariate Gaussian mean and variance parameters
 
@@ -113,6 +113,7 @@ class MultivariateGaussian:
 	"""
 	Class for multivariate Gaussian Distribution Estimator
 	"""
+	__last_covariance_matrix_inverted = (None, None)
 
 	def __init__(self):
 		"""
@@ -181,7 +182,7 @@ class MultivariateGaussian:
 			raise ValueError(
 				"Estimator must first be fitted before calling `pdf` function")
 		x_minus_mu = X - self.mu_
-		cov_inv = inv(self.cov_)
+		cov_inv = MultivariateGaussian.__invert_matrix(self.cov_)
 
 		def sample_pdf(x):
 			return np.exp(-np.sum(x @ cov_inv @ x.T, axis=0) / 2) / np.sqrt(
@@ -212,8 +213,15 @@ class MultivariateGaussian:
 		m = X.shape[0]
 		d = X.shape[1]
 		x_minus_mu = X - mu
-		cov_inv = inv(cov)
+		cov_inv = MultivariateGaussian.__invert_matrix(cov)
 		quadratic_form = lambda x: x @ cov_inv @ x.T
 		return -m * d / 2 * np.log(2 * np.pi) \
 			   - m / 2 * np.log(det(cov)) \
 			   - np.sum(np.apply_along_axis(quadratic_form, 1, x_minus_mu)) / 2
+
+	@staticmethod
+	def __invert_matrix(matrix: np.ndarray):
+		if (matrix ==
+			MultivariateGaussian.__last_covariance_matrix_inverted[0]).all():
+			return MultivariateGaussian.__last_covariance_matrix_inverted[1]
+		return inv(matrix)
