@@ -1,9 +1,11 @@
+import math
 from typing import Tuple
 import numpy as np
 import pandas as pd
 
 
-def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .75) \
+def split_train_test(X: pd.DataFrame, y: pd.Series,
+                     train_proportion: float = .75) \
         -> Tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     """
     Randomly split given sample to a training- and testing sample
@@ -33,7 +35,11 @@ def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .7
         Responses of test samples
 
     """
-    raise NotImplementedError()
+    rand_X = X.sample(frac=1)
+    rand_y = y.reindex_like(rand_X)
+    n_train_samples = math.ceil(train_proportion * y.shape[0])
+    return rand_X.iloc[:n_train_samples], rand_y.iloc[:n_train_samples], \
+           rand_X.iloc[n_train_samples:], rand_y.iloc[n_train_samples:]
 
 
 def confusion_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
