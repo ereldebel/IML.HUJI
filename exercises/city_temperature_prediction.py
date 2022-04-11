@@ -62,7 +62,8 @@ if __name__ == '__main__':
     # Question 3 - Exploring differences between countries
     data_mean_and_std_by_month = data.groupby(["Country", "Month"])[
         "Temp"].agg(["mean", "std"]).reset_index()
-    fig = px.line(data_mean_and_std_by_month,line_group="Country", x="Month", y="mean", error_y="std", color="Country")
+    fig = px.line(data_mean_and_std_by_month, line_group="Country", x="Month",
+                  y="mean", error_y="std", color="Country")
     fig.layout = go.Layout(
         title="The Mean Temperature and It's standard deviation as Error by Country",
         xaxis_title="Month",
@@ -80,17 +81,20 @@ if __name__ == '__main__':
         loss = round(poly_model.fit(*train).loss(*test), 2)
         print(f"k = {k}, loss = {loss}")
         losses.append(loss)
-    fig = go.Figure(go.Bar(y=losses, name="Loss By Degree", text=losses))
+    fig = go.Figure(
+        go.Bar(x=np.array(range(1, 11)), y=losses, name="Loss By Degree",
+               text=losses))
     fig.layout = go.Layout(
         title="Loss of Polynomial Fitted to Israel Temperature by Day of Year by Polynomial Degree",
         xaxis_title="Polinomial Degree", yaxis_title="Loss")
     fig.show()
 
     # Question 5 - Evaluating fitted model on different countries
-    poly_model = PolynomialFitting(4)
+    poly_model = PolynomialFitting(5)
     poly_model.fit(israel_data.DayOfYear.values, israel_data.Temp.values)
     loss_by_country = (data[data.Country != "Israel"].groupby("Country").apply(
-        lambda df: poly_model.loss(df.DayOfYear, df.Temp))).reset_index(name="Loss")
+        lambda df: poly_model.loss(df.DayOfYear, df.Temp))).reset_index(
+        name="Loss")
     fig = px.bar(loss_by_country, x="Country", y="Loss",
                  text=loss_by_country.Loss.apply(lambda x: round(x, 2)))
     fig.layout = go.Layout(
