@@ -2,7 +2,6 @@ from typing import NoReturn
 from ...base import BaseEstimator
 import numpy as np
 from numpy.linalg import det, inv
-from ...metrics import misclassification_error
 
 
 class LDA(BaseEstimator):
@@ -127,4 +126,5 @@ class LDA(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
+        from ...metrics import misclassification_error
         return misclassification_error(y, self.predict(X))

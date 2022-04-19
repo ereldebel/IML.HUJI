@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 
 pio.templates.default = "simple_white"
+from math import atan2, pi
 
 
 def load_dataset(filename: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -28,8 +29,8 @@ def load_dataset(filename: str) -> Tuple[np.ndarray, np.ndarray]:
         Class vector specifying for each sample its class
 
     """
-    full_data = np.load(filename)
-    return full_data[:, :-1], full_data[:, -1]
+    data = np.load(filename)
+    return data[:, :2], data[:, 2].astype(int)
 
 
 def run_perceptron():
@@ -53,13 +54,38 @@ def run_perceptron():
         perceptron = Perceptron(callback=callback)
         perceptron.fit(X, y)
 
-        # Plot figure
+        # Plot figure of loss as function of fitting iteration
         fig = px.line(y=losses, x=np.array(range(len(losses))))
         fig.layout = go.Layout(
             title=f"Perceptron training loss as a function of the training iteration.\nClasses are {n}.",
             xaxis={"title": "Iteration"},
             yaxis={"rangemode": "tozero", "title": "Loss"})
         fig.show(renderer="browser")
+
+
+def get_ellipse(mu: np.ndarray, cov: np.ndarray):
+    """
+    Draw an ellipse centered at given location and according to specified covariance matrix
+
+    Parameters
+    ----------
+    mu : ndarray of shape (2,)
+        Center of ellipse
+
+    cov: ndarray of shape (2,2)
+        Covariance of Gaussian
+
+    Returns
+    -------
+        scatter: A plotly trace object of the ellipse
+    """
+    l1, l2 = tuple(np.linalg.eigvalsh(cov)[::-1])
+    theta = atan2(l1 - cov[0, 0], cov[0, 1]) if cov[0, 1] != 0 else (np.pi / 2 if cov[0, 0] < cov[1, 1] else 0)
+    t = np.linspace(0, 2 * pi, 100)
+    xs = (l1 * np.cos(theta) * np.cos(t)) - (l2 * np.sin(theta) * np.sin(t))
+    ys = (l1 * np.sin(theta) * np.cos(t)) + (l2 * np.cos(theta) * np.sin(t))
+
+    return go.Scatter(x=mu[0] + xs, y=mu[1] + ys, mode="lines", marker_color="black")
 
 
 def compare_gaussian_classifiers():
@@ -80,7 +106,18 @@ def compare_gaussian_classifiers():
 
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
+        # Create subplots
         from IMLearn.metrics import accuracy
+        raise NotImplementedError()
+
+        # Add traces for data-points setting symbols and colors
+        raise NotImplementedError()
+
+        # Add `X` dots specifying fitted Gaussians' means
+        raise NotImplementedError()
+
+        # Add ellipses depicting the covariances of the fitted Gaussians
+        raise NotImplementedError()
         fig = make_subplots(cols=2, subplot_titles=(
             f"LDA. Accuracy = {accuracy(lda_predictions, y)}",
             f"Gaussian Naive Bayes. Accuracy = {accuracy(naive_bayes_predictions, y)}"),

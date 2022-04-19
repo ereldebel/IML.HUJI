@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import Callable
 from typing import NoReturn
 from ...base import BaseEstimator
-from ...metrics import misclassification_error
 import numpy as np
 
 
@@ -28,11 +27,9 @@ class Perceptron(BaseEstimator):
         Coefficients vector fitted by Perceptron algorithm. To be set in
         `Perceptron.fit` function.
 
-    training_loss_: array of floats
-        holds the loss value of the algorithm during training.
-        training_loss_[i] is the loss value of the i'th training iteration.
-        to be filled in `Perceptron.fit` function.
-
+    callback_: Callable[[Perceptron, np.ndarray, int], None]
+            A callable to be called after each update of the model while fitting to given data
+            Callable function should receive as input a Perceptron instance, current sample and current response
     """
 
     def __init__(self,
@@ -146,4 +143,5 @@ class Perceptron(BaseEstimator):
         loss : float
             Performance under missclassification loss function
         """
+        from ...metrics import misclassification_error
         return misclassification_error(y, self._predict(X))
