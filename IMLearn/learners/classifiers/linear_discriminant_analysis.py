@@ -54,7 +54,6 @@ class LDA(BaseEstimator):
         grouped_X = np.array(
             np.split(sorted_X, np.cumsum(bincount)[:-1], axis=0), dtype=object)
         self.mu_ = np.array([np.mean(group, axis=0) for group in grouped_X])
-        # self.mu_ = np.apply_along_axis(lambda x: np.mean(x, axis=1), 0, grouped_X)
         summed_by_group_outer = np.array(
             np.sum(
                 [[(lambda x: np.outer(x, x))(group[j] - self.mu_[i]) for j in
