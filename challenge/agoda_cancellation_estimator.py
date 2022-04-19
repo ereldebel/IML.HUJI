@@ -33,7 +33,7 @@ class AgodaCancellationEstimator(BaseEstimator):
         self._model = make_pipeline(StandardScaler(),
                                     SVR(kernel="rbf", C=C, epsilon=epsilon))
         # self._model = make_pipeline(StandardScaler(),DecisionTreeClassifier(max_depth=number_of_neighbors))
-        # self._model = KNeighborsClassifier(n_neighbors=number_of_neighbors)
+        # self._model = DecisionTreeClassifier(max_depth=1000)
 
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
