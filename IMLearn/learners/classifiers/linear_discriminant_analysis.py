@@ -47,9 +47,8 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        self.classes_ = np.unique(y)
-        bincount = np.bincount(y.astype(int))
-        self.pi_ = bincount / self.classes_.size
+        self.classes_, bincount = np.unique(y,return_counts=True)
+        self.pi_ = bincount / y.size
         sorted_X = X[y.argsort()]
         grouped_X = np.array(
             np.split(sorted_X, np.cumsum(bincount)[:-1], axis=0), dtype=object)

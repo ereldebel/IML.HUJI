@@ -6,6 +6,7 @@ from challenge.agoda_cancellation_preprocessor import \
 import numpy as np
 import pandas as pd
 
+WEEK = 3
 
 def load_data(filename: str):
     """
@@ -70,19 +71,19 @@ if __name__ == '__main__':
     design_matrix = p.preprocess(full_data)
     cancellation_labels = p.preprocess_labels(full_data.cancellation_datetime,
                                               full_data.booking_datetime)
-
-    test_set_1 = p.preprocess(pd.read_csv("test_set_week_1.csv"))
-    test_set_1_labels = pd.read_csv("test_set_week_1_labels.csv")[
-        "h_booking_id|label"].astype(str).apply(lambda x: int(x[-1]))
-    test_set_1 = fill_missing_columns(design_matrix, test_set_1)
-    design_matrix = pd.concat([design_matrix, test_set_1])
-    cancellation_labels = pd.concat([cancellation_labels, test_set_1_labels])
+    for i in range(1, WEEK):
+        test_set_i = p.preprocess(pd.read_csv(f"test_set_week_{i}.csv"))
+        test_set_i_labels = pd.read_csv(f"test_set_week_{i}_labels.csv")[
+            "h_booking_id|label"].astype(str).apply(lambda x: int(x[-1]))
+        test_set_i = fill_missing_columns(design_matrix, test_set_i)
+        design_matrix = pd.concat([design_matrix, test_set_i])
+        cancellation_labels = pd.concat([cancellation_labels, test_set_i_labels])
 
     # Fit model over data
     estimator = AgodaCancellationEstimator(C=1, epsilon=0.19, threshold=0.33) \
         .fit(design_matrix, cancellation_labels)
 
-    test_set = p.preprocess(pd.read_csv("test_set_week_2.csv"))
+    test_set = p.preprocess(pd.read_csv(f"test_set_week_{WEEK}.csv"))
     # Expand test_set with 0 columns to fit the design_matrix shape
     test_set = fill_missing_columns(design_matrix, test_set)
 
