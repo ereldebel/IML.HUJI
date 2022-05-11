@@ -47,7 +47,7 @@ class LDA(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        self.classes_, bincount = np.unique(y,return_counts=True)
+        self.classes_, bincount = np.unique(y, return_counts=True)
         self.pi_ = bincount / y.size
         sorted_X = X[y.argsort()]
         grouped_X = np.array(
@@ -76,9 +76,11 @@ class LDA(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        log_pi_plus_X_cov_mu = np.log(self.pi_) + X @ self._cov_inv @ self.mu_.T
+        log_pi_plus_X_cov_mu = np.log(
+            self.pi_) + X @ self._cov_inv @ self.mu_.T
         mu_cov_mu = 0.5 * (self.mu_ @ self._cov_inv @ self.mu_.T).diagonal()
-        return np.apply_along_axis(np.argmax, 1, log_pi_plus_X_cov_mu - mu_cov_mu)
+        return np.apply_along_axis(np.argmax, 1,
+                                   log_pi_plus_X_cov_mu - mu_cov_mu)
 
     def likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -100,11 +102,9 @@ class LDA(BaseEstimator):
                 "Estimator must first be fitted before calling `likelihood` function")
         constant_factor = 1 / (
                 np.power(2 * np.pi, self.mu_.shape[1] / 2) * det(self.cov_))
-        X_minus_mu = np.apply_along_axis(lambda x: x - self.mu_, 0, X)
-        # creates a 3d column of shape (n_samples, n_features, n_classes)
-        exponent = np.apply_along_axis(lambda x_minus_mu: (
-                x_minus_mu.T @ self._cov_inv @ x_minus_mu).diagonal(), 0,
-                                       X_minus_mu)
+        X_minus_mu = np.apply_along_axis(lambda x: x - self.mu_, 1, X)
+        exponent = np.array(
+            [(x_minus_mu @ self._cov_inv @ x_minus_mu.T).diagonal() for x_minus_mu in X_minus_mu])
         return constant_factor * np.exp(-0.5 * exponent)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:

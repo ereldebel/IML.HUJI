@@ -106,7 +106,6 @@ def compare_gaussian_classifiers():
         naive_bayes = GaussianNaiveBayes().fit(X, y)
         lda_predictions = lda.predict(X)
         naive_bayes_predictions = naive_bayes.predict(X)
-
         # Plot a figure with two suplots, showing the Gaussian Naive Bayes predictions on the left and LDA predictions
         # on the right. Plot title should specify dataset used and subplot titles should specify algorithm and accuracy
         # Create subplots
@@ -155,5 +154,5 @@ def compare_gaussian_classifiers():
 
 if __name__ == '__main__':
     np.random.seed(0)
-    run_perceptron()
+    # run_perceptron()
     compare_gaussian_classifiers()

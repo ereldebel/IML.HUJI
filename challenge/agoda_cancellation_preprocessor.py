@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import pandas as pd
 
 
@@ -17,21 +19,39 @@ class AgodaCancellationPreprocessor:
         self.average_cancellation_days_from_booking = dict()
         self.average_cancellation_days_to_checkin = dict()
         dates = pd.DataFrame([])
-        dates["cancellation_datetime"] = pd.to_datetime(full_data["cancellation_datetime"])
-        dates["booking_datetime"] = pd.to_datetime(full_data["booking_datetime"])
+        dates["cancellation_datetime"] = pd.to_datetime(
+            full_data["cancellation_datetime"])
+        dates["booking_datetime"] = pd.to_datetime(
+            full_data["booking_datetime"])
         dates["checkin_date"] = pd.to_datetime(full_data["checkin_date"])
-        for id, cancellation, booking_date, checkin_date in pd.concat([full_data[
-            "h_customer_id"], dates["cancellation_datetime"], dates["booking_datetime"], dates["checkin_date"]], axis=1).itertuples(
+        for id, cancellation, booking_date, checkin_date in pd.concat(
+                [full_data[
+                     "h_customer_id"], dates["cancellation_datetime"],
+                 dates["booking_datetime"], dates["checkin_date"]],
+                axis=1).itertuples(
             index=False):
             if cancellation == 0:
                 if id in self.average_cancellation_days_from_booking:
-                    self.average_cancellation_days_from_booking[id] += (cancellation - booking_date).days/self.number_of_times_customer_canceled[id]
-                    self.average_cancellation_days_to_checkin[id] += (checkin_date - cancellation).days/self.number_of_times_customer_canceled[id]
+                    self.average_cancellation_days_from_booking[id] += (
+                                                                               cancellation - booking_date).days / \
+                                                                       self.number_of_times_customer_canceled[
+                                                                           id]
+                    self.average_cancellation_days_to_checkin[id] += (
+                                                                             checkin_date - cancellation).days / \
+                                                                     self.number_of_times_customer_canceled[
+                                                                         id]
                 else:
-                    self.average_cancellation_days_from_booking[id] = (cancellation - booking_date).days/self.number_of_times_customer_canceled[id]
-                    self.average_cancellation_days_to_checkin[id] = (checkin_date - cancellation).days /self.number_of_times_customer_canceled[id]
+                    self.average_cancellation_days_from_booking[id] = (
+                                                                              cancellation - booking_date).days / \
+                                                                      self.number_of_times_customer_canceled[
+                                                                          id]
+                    self.average_cancellation_days_to_checkin[id] = (
+                                                                            checkin_date - cancellation).days / \
+                                                                    self.number_of_times_customer_canceled[
+                                                                        id]
 
-    def preprocess(self, full_data: pd.DataFrame) -> pd.DataFrame:
+    def preprocess(self, full_data: pd.DataFrame) -> Tuple[
+        pd.DataFrame, List[pd.DataFrame]]:
         # take features that need no processing.
         features = full_data[["h_booking_id",
                               "hotel_star_rating",
@@ -118,7 +138,68 @@ class AgodaCancellationPreprocessor:
         features["cancellation_policy_change_during_window"] = \
             features.cancellation_policy_at_end_of_cancellation_window - \
             features.cancellation_policy_at_start_of_cancellation_window
-        return features.fillna(0)
+
+        def week_specific_features(i):
+            week_features = pd.DataFrame()
+            cancellation_week_start_diff = features.booking_checkin_difference - 7 * i
+            cancellation_week_start_diff.name = "cancellation_week_start"
+            cancellation_policy_at_start_of_cancellation_week = pd.concat(
+                [cancellation_week_start_diff, features["length_of_stay"],
+                 full_data["cancellation_policy_code"]], axis=1).apply(
+                lambda x: AgodaCancellationPreprocessor._current_policy(
+                    x["cancellation_week_start"],
+                    x["length_of_stay"],
+                    x["cancellation_policy_code"]), axis=1)
+            cancellation_week_end_diff = features.booking_checkin_difference - 7 * (
+                    i + 1)
+            cancellation_week_end_diff.name = "cancellation_week_end"
+            cancellation_policy_at_end_of_cancellation_week = pd.concat(
+                [cancellation_week_end_diff, features["length_of_stay"],
+                 full_data["cancellation_policy_code"]], axis=1).apply(
+                lambda x: AgodaCancellationPreprocessor._current_policy(
+                    x["cancellation_week_end"],
+                    x["length_of_stay"],
+                    x["cancellation_policy_code"]), axis=1)
+            cancellation_policy_change_during_week = \
+                cancellation_policy_at_end_of_cancellation_week - \
+                cancellation_policy_at_start_of_cancellation_week
+            return pd.concat(
+                [cancellation_policy_at_start_of_cancellation_week,
+                 cancellation_policy_at_end_of_cancellation_week,
+                 cancellation_policy_change_during_week], axis=1)
+
+        return features.fillna(0), [week_specific_features(i) for i in
+                                    range(1, 6)]
+
+    def add_week_features(self, week_set: pd.DataFrame,
+                          full_data: pd.DataFrame):
+        booking_date = pd.to_datetime(full_data["booking_datetime"])
+        cancellation_week_start_diff = booking_date.apply(
+            lambda x: pd.to_datetime("2018-12-07") - x).dt.days
+        cancellation_week_start_diff.name = "cancellation_week_start"
+        week_set[
+            "cancellation_policy_at_start_of_cancellation_week"] = pd.concat(
+            [cancellation_week_start_diff, week_set["length_of_stay"],
+             full_data["cancellation_policy_code"]], axis=1).apply(
+            lambda x: AgodaCancellationPreprocessor._current_policy(
+                x["cancellation_week_start"],
+                x["length_of_stay"],
+                x["cancellation_policy_code"]), axis=1)
+        cancellation_week_end_diff = booking_date.apply(
+            lambda x: pd.to_datetime("2018-12-13") - x).dt.days
+        cancellation_week_end_diff.name = "cancellation_week_end"
+        week_set[
+            "cancellation_policy_at_end_of_cancellation_week"] = pd.concat(
+            [cancellation_week_end_diff, week_set["length_of_stay"],
+             full_data["cancellation_policy_code"]], axis=1).apply(
+            lambda x: AgodaCancellationPreprocessor._current_policy(
+                x["cancellation_week_end"],
+                x["length_of_stay"],
+                x["cancellation_policy_code"]), axis=1)
+        week_set["cancellation_policy_change_during_week"] = \
+            week_set.cancellation_policy_at_end_of_cancellation_week - \
+            week_set.cancellation_policy_at_start_of_cancellation_week
+        week_set.fillna(0, inplace=True)
 
     @staticmethod
     def _current_policy(days_from_checkin: pd.Series,
@@ -143,14 +224,14 @@ class AgodaCancellationPreprocessor:
         return current_penalty
 
     def preprocess_labels(self, cancellation_date: pd.Series,
-                          booking_datetime: pd.Series) -> pd.Series:
+                          booking_datetime: pd.Series) -> List[pd.Series]:
         cancellation = cancellation_date.apply(
             lambda x: pd.Timestamp.now() if x == 0 else pd.to_datetime(x))
         booking = pd.to_datetime(booking_datetime)
         diff = (pd.to_datetime(cancellation, unit="s") - pd.to_datetime(
             booking,
             unit="s")).dt.days
-        return (diff >= 7) & (diff < 35)
+        return [(diff >= 7 * i) & (diff < 7 * (i + 1)) for i in range(1, 6)]
 
     def _number_of_times_cancelled(self, id: int) -> int:
         if id in self.number_of_times_customer_canceled:

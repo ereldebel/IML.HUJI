@@ -90,10 +90,10 @@ class GaussianNaiveBayes(BaseEstimator):
                 "Estimator must first be fitted before calling `likelihood` function")
         constant_factor = 1 / (
                 np.power(2 * np.pi, self.mu_.shape[1] / 2) * np.prod(
-            self.vars_, axis=0))
+            self.vars_, axis=1))
         exponent = np.apply_along_axis(
-            lambda x: np.sum((x - self.mu_) ** 2 / self.vars_, axis=0), 1, X)
-        return np.apply_along_axis(lambda x: constant_factor * x, 0,
+            lambda x: np.sum((x - self.mu_) ** 2 / self.vars_, axis=1), 1, X)
+        return np.apply_along_axis(lambda x: constant_factor * x, 1,
                                    np.exp(-0.5 * exponent))
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
