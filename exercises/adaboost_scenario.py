@@ -61,9 +61,8 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000,
 	                      name="prediction loss over test set")],
 	          layout=go.Layout(
 		          title=title,
-		          xaxis={"rangemode": "tozero", "title": "Number of Learners"},
-		          yaxis={"rangemode": "tozero",
-		                 "title": "Misclassification Loss"}
+		          xaxis={"title": "Number of Learners"},
+		          yaxis={"title": "Misclassification Loss"}
 	          )).show()
 
 	# Question 2: Plotting decision surfaces
