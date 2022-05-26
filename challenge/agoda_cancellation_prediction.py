@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 import pandas as pd
 
-WEEK = 6
+WEEK = 7
 
 
 def load_data(filename: str):
@@ -97,7 +97,7 @@ if __name__ == '__main__':
 	design_matrix.fillna(0, inplace=True)
 	cancellation_labels = np.array(cancellation_labels).reshape((-1,))
 	# Fit model over data
-	estimator = RandomForestClassifier(random_state=1, max_leaf_nodes=40,
+	estimator = RandomForestClassifier(random_state=1, max_leaf_nodes=45,
 	                                   n_estimators=200,
 	                                   max_depth=10,
 	                                   class_weight='balanced_subsample',
