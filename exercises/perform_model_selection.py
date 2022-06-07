@@ -50,8 +50,7 @@ def select_polynomial_degree(n_samples: int = 100, noise: float = 5):
 	degree_range = range(11)
 	for degree in degree_range:
 		errors[degree] = cross_validate(PolynomialFitting(degree), train_X,
-		                                train_y,
-		                                mean_square_error)
+		                                train_y, mean_square_error)
 	minimizer = np.argmin(errors[:, 1])
 	fig = go.Figure(
 		[go.Scatter(x=list(degree_range), y=errors[:, 0], mode="lines+markers",
@@ -87,13 +86,45 @@ def select_regularization_parameter(n_samples: int = 50,
 		Number of regularization parameter values to evaluate for each of the algorithms
 	"""
 	# Question 6 - Load diabetes dataset and split into training and testing portions
-	raise NotImplementedError()
-
+	X, y = datasets.load_diabetes(return_X_y=True)
+	train_X, test_X, train_y, test_y = train_test_split(X, y,
+	                                                    test_size=n_samples)
+	minimizers=[1,1]
 	# Question 7 - Perform CV for different values of the regularization parameter for Ridge and Lasso regressions
-	raise NotImplementedError()
+	for model, min, max, name, minimizer_i in [
+		(RidgeRegression, 0.0001, 20, "ridge", 0),
+		(Lasso, 0.0001, 4, "lasso", 1)]:
+		errors = np.ndarray([n_evaluations, 2], float)
+		evaluation_range = np.linspace(min, max, n_evaluations)
+		for i, lam in enumerate(evaluation_range):
+			errors[i] = cross_validate(model(lam), train_X, train_y,
+			                           mean_square_error)
+		minimizers[minimizer_i] = evaluation_range[np.argmin(errors[:, 1])]
+		fig = go.Figure(
+			[go.Scatter(x=evaluation_range, y=errors[:, 0],
+			            mode="lines+markers",
+			            name="train error"),
+			 go.Scatter(x=evaluation_range, y=errors[:, 1],
+			            mode="lines+markers",
+			            name="validation error")
+			 ], layout=go.Layout(
+				title=rf"$\text{{Mean Train and Validation Errors Using 5-fold"
+				      rf" Cross Validation on {name} regressor over the "
+				      rf"diabetes dataset.}}$"))
+		fig.show()
 
 	# Question 8 - Compare best Ridge model, best Lasso model and Least Squares model
-	raise NotImplementedError()
+	ridge_error = RidgeRegression(minimizers[0]).fit(train_X, train_y).loss(
+		test_X, test_y)
+	lasso_error = mean_square_error(test_y, Lasso(minimizers[1]).fit(train_X,
+	                                                                   train_y).
+	                                predict(test_X))
+	ls_error = LinearRegression().fit(train_X, train_y).loss(test_X, test_y)
+	print(
+		f"ridge using lambda = {minimizers[0]} gave a test error of {ridge_error}")
+	print(
+		f"lasso using lambda = {minimizers[1]} gave a test error of {lasso_error}")
+	print(f"least squares gave a test error of {ls_error}")
 
 
 if __name__ == '__main__':
@@ -101,3 +132,4 @@ if __name__ == '__main__':
 	select_polynomial_degree()
 	select_polynomial_degree(noise=0)
 	select_polynomial_degree(n_samples=1500, noise=10)
+	select_regularization_parameter()
