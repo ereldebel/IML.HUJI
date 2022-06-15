@@ -4,68 +4,70 @@ from IMLearn.base import BaseModule, BaseLR
 
 
 class FixedLR(BaseLR):
-    """
-    Class representing a fixed learning rate
-    """
-    def __init__(self, base_lr: float):
-        """
-        Instantiate a fixed learning-rate object
+	"""
+	Class representing a fixed learning rate
+	"""
 
-        Parameters:
-        -----------
-         base_lr: float
-            Learning rate value to be returned at each call
-        """
-        super().__init__()
-        self.base_lr = base_lr
+	def __init__(self, base_lr: float):
+		"""
+		Instantiate a fixed learning-rate object
 
-    def lr_step(self, **lr_kwargs) -> float:
-        """
-        Specify learning rate at call
+		Parameters:
+		-----------
+		 base_lr: float
+			Learning rate value to be returned at each call
+		"""
+		super().__init__()
+		self.base_lr = base_lr
 
-        Returns:
-        --------
-        eta: float
-            Fixed learning rate specified when initializing instance
+	def lr_step(self, **lr_kwargs) -> float:
+		"""
+		Specify learning rate at call
 
-        Note:
-        -----
-        No arguments are expected
-        """
-        raise NotImplementedError()
+		Returns:
+		--------
+		eta: float
+			Fixed learning rate specified when initializing instance
+
+		Note:
+		-----
+		No arguments are expected
+		"""
+		return self.base_lr
 
 
 class ExponentialLR(FixedLR):
-    """
-    Class representing an exponentially decaying learning rate
-    """
-    def __init__(self, base_lr: float, decay_rate: float):
-        """
-        Instantiate an exponentially decaying learning-rate object, i.e. eta_t = eta*gamma^t
+	"""
+	Class representing an exponentially decaying learning rate
+	"""
 
-        Parameters:
-        ----------
-        base_lr: float
-            Learning to be returned at t=0 (i.e eta)
+	def __init__(self, base_lr: float, decay_rate: float):
+		"""
+		Instantiate an exponentially decaying learning-rate object, i.e. eta_t = eta*gamma^t
 
-        decay_rate: float
-            Decay rate of learning-rate (i.e. gamma)
-        """
-        super().__init__(base_lr)
-        self.decay_rate = decay_rate
+		Parameters:
+		----------
+		base_lr: float
+			Learning to be returned at t=0 (i.e eta)
 
-    def lr_step(self, t: int, **lr_kwargs) -> float:
-        """
-        Specify learning rate at call `t`
+		decay_rate: float
+			Decay rate of learning-rate (i.e. gamma)
+		"""
+		super().__init__(base_lr)
+		self.decay_rate = decay_rate
 
-        Parameters:
-        -----------
-        t: int
-            Step time for which to calculate learning rate
+	def lr_step(self, t: int, **lr_kwargs) -> float:
+		"""
+		Specify learning rate at call `t`
 
-        Returns:
-        --------
-        eta_t: float
-            Exponential decay according to eta_t = eta*gamma^t
-        """
-        raise NotImplementedError()
+		Parameters:
+		-----------
+		t: int
+			Step time for which to calculate learning rate
+
+		Returns:
+		--------
+		eta_t: float
+			Exponential decay according to eta_t = eta*gamma^t
+		"""
+		return super().lr_step() * np.power(self.decay_rate, t)
