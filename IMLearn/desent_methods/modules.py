@@ -107,12 +107,11 @@ class LogisticModule(BaseModule):
 	"""
 	Class representing the logistic regression objective function
 
-	Represents the function: f(w) = - (1/m) sum_i^m[y*<x_i,w> - log(sigmoid(<x_i,w>))]
-	"""
-
-	def __init__(self, weights: np.ndarray = None):
-		"""
-		Initialize a logistic regression module instance
+    Represents the function: f(w) = - (1/m) sum_i^m[y*<x_i,w> - log(1+exp(<x_i,w>))]
+    """
+    def __init__(self, weights: np.ndarray = None):
+        """
+        Initialize a logistic regression module instance
 
 		Parameters:
 		----------
@@ -200,8 +199,8 @@ class RegularizedModule(BaseModule):
 		self.fidelity_module_, self.regularization_module_, self.lam_ = fidelity_module, regularization_module, lam
 		self.include_intercept_ = include_intercept
 
-		if weights:
-			self.weights(weights)
+        if weights is not None:
+            self.weights(weights)
 
 	def compute_output(self, **kwargs) -> np.ndarray:
 		"""
