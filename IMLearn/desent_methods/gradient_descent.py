@@ -135,7 +135,7 @@ class GradientDescent:
 				result = f.weights
 			elif self.out_type_ == OUTPUT_VECTOR_TYPE[2]:
 				result += f.weights
-			elif objective < lowest_objective:
+			elif lowest_objective == None or objective < lowest_objective:
 				result = f.weights
 
 			self.callback_(solver=self, value=value, weight=f.weights, grad=grad,

@@ -95,7 +95,18 @@ def compare_fixed_learning_rates(
 			GradientDescent(learning_rate=FixedLR(eta), callback=callback).fit(
 				module(init))
 			plot_descent_path(module, np.array(weights),
-			                  fr"$\text{{{module_name} with }}\eta = {eta}$").show()
+			                  fr"$\text{{Descent path of {module_name} with }}\eta = {eta}$").show()
+	for module, module_name in ((L1, "L1"), (L2, "L2")):
+		for eta in etas:
+			callback, values, weights = get_gd_state_recorder_callback()
+			best = GradientDescent(learning_rate=FixedLR(eta), callback=callback, out_type="best").fit(
+				module(init))
+			go.Figure(go.Scatter(x=list(range(1, len(values) + 1)),
+			                     y=[np.linalg.norm(grad * eta) for grad in
+			                        values],
+			                     mode="lines+markers"), layout=go.Layout(
+				title=fr"$\text{{Convergence rate of {module_name} with }}\eta = {eta}$")).show()
+			print(f"minimal value for {module_name} with eta = {eta}: {best}")
 
 
 def compare_exponential_decay_rates(
