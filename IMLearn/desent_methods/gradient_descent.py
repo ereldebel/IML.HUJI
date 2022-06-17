@@ -9,72 +9,74 @@ OUTPUT_VECTOR_TYPE = ["last", "best", "average"]
 
 
 def default_callback(**kwargs) -> NoReturn:
-    pass
+	pass
 
 
 class GradientDescent:
-    """
-    Gradient Descent algorithm
+	"""
+	Gradient Descent algorithm
 
-    Attributes:
-    -----------
-    learning_rate_: BaseLR
-        Learning rate strategy for retrieving the learning rate at each iteration t of the algorithm
+	Attributes:
+	-----------
+	learning_rate_: BaseLR
+		Learning rate strategy for retrieving the learning rate at each iteration t of the algorithm
 
-    tol_: float
-        The stopping criterion. Training stops when the Euclidean norm of w^(t)-w^(t-1) is less than
-        specified tolerance
+	tol_: float
+		The stopping criterion. Training stops when the Euclidean norm of w^(t)-w^(t-1) is less than
+		specified tolerance
 
-    max_iter_: int
-        The maximum number of GD iterations to be performed before stopping training
+	max_iter_: int
+		The maximum number of GD iterations to be performed before stopping training
 
-    out_type_: str
-        Type of returned solution:
-            - `last`: returns the point reached at the last GD iteration
-            - `best`: returns the point achieving the lowest objective
-            - `average`: returns the average point over the GD iterations
+	out_type_: str
+		Type of returned solution:
+			- `last`: returns the point reached at the last GD iteration
+			- `best`: returns the point achieving the lowest objective
+			- `average`: returns the average point over the GD iterations
 
-    callback_: Callable[[...], None], default=default_callback
-        A callable function to be called after each update of the model while fitting to given data.
-        Callable function receives as input any argument relevant for the current GD iteration. Arguments
-        are specified in the `GradientDescent.fit` function
-    """
-    def __init__(self,
-                 learning_rate: BaseLR = FixedLR(1e-3),
-                 tol: float = 1e-5,
-                 max_iter: int = 1000,
-                 out_type: str = "last",
-                 callback: Callable[[GradientDescent, ...], None] = default_callback):
-        """
-        Instantiate a new instance of the GradientDescent class
+	callback_: Callable[[...], None], default=default_callback
+		A callable function to be called after each update of the model while fitting to given data.
+		Callable function receives as input any argument relevant for the current GD iteration. Arguments
+		are specified in the `GradientDescent.fit` function
+	"""
 
-        Parameters
-        ----------
-        learning_rate: BaseLR, default=FixedLR(1e-3)
-            Learning rate strategy for retrieving the learning rate at each iteration t of the algorithm
+	def __init__(self,
+	             learning_rate: BaseLR = FixedLR(1e-3),
+	             tol: float = 1e-5,
+	             max_iter: int = 1000,
+	             out_type: str = "last",
+	             callback: Callable[
+		             [GradientDescent, ...], None] = default_callback):
+		"""
+		Instantiate a new instance of the GradientDescent class
 
-        tol: float, default=1e-5
-            The stopping criterion. Training stops when the Euclidean norm of w^(t)-w^(t-1) is less than
-            specified tolerance
+		Parameters
+		----------
+		learning_rate: BaseLR, default=FixedLR(1e-3)
+			Learning rate strategy for retrieving the learning rate at each iteration t of the algorithm
 
-        max_iter: int, default=1000
-            The maximum number of GD iterations to be performed before stopping training
+		tol: float, default=1e-5
+			The stopping criterion. Training stops when the Euclidean norm of w^(t)-w^(t-1) is less than
+			specified tolerance
 
-        out_type: str, default="last"
-            Type of returned solution. Supported types are specified in class attributes
+		max_iter: int, default=1000
+			The maximum number of GD iterations to be performed before stopping training
 
-        callback: Callable[[...], None], default=default_callback
-            A callable function to be called after each update of the model while fitting to given data.
-            Callable function receives as input any argument relevant for the current GD iteration. Arguments
-            are specified in the `GradientDescent.fit` function
-        """
-        self.learning_rate_ = learning_rate
-        if out_type not in OUTPUT_VECTOR_TYPE:
-            raise ValueError("output_type not supported")
-        self.out_type_ = out_type
-        self.tol_ = tol
-        self.max_iter_ = max_iter
-        self.callback_ = callback
+		out_type: str, default="last"
+			Type of returned solution. Supported types are specified in class attributes
+
+		callback: Callable[[...], None], default=default_callback
+			A callable function to be called after each update of the model while fitting to given data.
+			Callable function receives as input any argument relevant for the current GD iteration. Arguments
+			are specified in the `GradientDescent.fit` function
+		"""
+		self.learning_rate_ = learning_rate
+		if out_type not in OUTPUT_VECTOR_TYPE:
+			raise ValueError("output_type not supported")
+		self.out_type_ = out_type
+		self.tol_ = tol
+		self.max_iter_ = max_iter
+		self.callback_ = callback
 
 	def fit(self, f: BaseModule, X: np.ndarray = None, y: np.ndarray = None):
 		"""
@@ -133,11 +135,11 @@ class GradientDescent:
 				result = f.weights
 			elif self.out_type_ == OUTPUT_VECTOR_TYPE[2]:
 				result += f.weights
-			elif lowest_objective == None or objective < lowest_objective:
+			elif lowest_objective is None or objective < lowest_objective:
 				result = f.weights
 
-			self.callback_(solver=self, value=value, weight=f.weights, grad=grad,
-			               t=t, eta=eta, delta=delta)
+			self.callback_(solver=self, value=value, weight=f.weights,
+			               grad=grad, t=t, eta=eta, delta=delta)
 			if delta < self.tol_:
 				break
 		if self.out_type_ == OUTPUT_VECTOR_TYPE[2]:

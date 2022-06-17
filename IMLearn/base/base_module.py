@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC
+from abc import ABC, abstractmethod
 import numpy as np
 
 
@@ -24,6 +24,7 @@ class BaseModule(ABC):
         """
         self.weights_ = weights
 
+    @abstractmethod
     def compute_output(self, **kwargs) -> np.ndarray:
         """
         Compute the output value of the function
@@ -43,6 +44,7 @@ class BaseModule(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """
         Compute the derivative of the function with respect to each of its parameters
