@@ -100,7 +100,8 @@ def compare_fixed_learning_rates(
 			callback, values, weights = get_gd_state_recorder_callback()
 			out = GradientDescent(learning_rate=FixedLR(eta),
 			                      callback=callback).fit(module(init))
-			if best_out is None or module(best_out).compute_output() > module(out).compute_output():
+			if best_out is None or module(best_out).compute_output() > module(
+					out).compute_output():
 				best_out = out
 				best_eta = eta
 			plot_descent_path(module, np.array(weights),
@@ -126,14 +127,13 @@ def compare_exponential_decay_rates(
 	fig.layout.showlegend = False
 	for i, gamma in enumerate(gammas):
 		callback, values, weights = get_gd_state_recorder_callback()
-		best = GradientDescent(learning_rate=ExponentialLR(eta, gamma),
-		                       callback=callback, out_type="best").fit(
-			L1(init))
+		last = GradientDescent(learning_rate=ExponentialLR(eta, gamma),
+		                       callback=callback).fit(L1(init))
 		fig.add_traces([go.Scatter(x=list(range(1, len(values) + 1)), y=values,
 		                           mode="lines+markers")], rows=(i // 2) + 1,
 		               cols=(i % 2) + 1)
 		print(
-			f"minimal value for L1 with eta = {eta} and gamma = {gamma}: {L1(best).compute_output()} at point {best}")
+			f"minimal value for L1 with eta = {eta} and gamma = {gamma}: {L1(last).compute_output()} at point {last}")
 
 	# Plot algorithm's convergence for the different values of gamma
 	fig.show()
@@ -189,11 +189,17 @@ def fit_logistic_regression():
 		X_train.to_numpy(), y_train.to_numpy(), X_test.to_numpy(), y_test.to_numpy()
 
 	# Plotting convergence rate of logistic regression over SA heart disease data
-	model = LogisticRegression().fit(X_train, y_train)
+	model = LogisticRegression(
+		solver=GradientDescent(learning_rate=FixedLR(1e-4),
+		                       max_iter=20000)).fit(X_train, y_train)
 	y_proba = model.predict_proba(X_train)
 	fpr, tpr, thresholds = roc_curve(y_train, y_proba)
 	argmax_alpha = np.argmax(tpr - fpr)
 	best_alpha = thresholds[argmax_alpha]
+	model = LogisticRegression(alpha=best_alpha,
+	                           solver=GradientDescent(
+		                           learning_rate=FixedLR(1e-4),
+		                           max_iter=20000)).fit(X_train, y_train)
 	test_error = model.loss(X_test, y_test)
 	go.Figure(
 		data=[go.Scatter(x=[0, 1], y=[0, 1], mode="lines",
@@ -214,18 +220,20 @@ def fit_logistic_regression():
 	# Fitting l1- and l2-regularized logistic regression models, using cross-validation to specify values
 	# of regularization parameter
 	for penalty in ("l1", "l2"):
-
-		errors = np.ndarray([100], float)
-		evaluation_range = np.linspace(0, 1, 100)
+		errors = np.ndarray([7], float)
+		evaluation_range = [.001, .002, .005, .01, .02, .05, .1]
 		for i, lam in enumerate(evaluation_range):
 			errors[i] = cross_validate(
-				LogisticRegression(penalty=penalty, lam=lam), X_train, y_train,
+				LogisticRegression(penalty=penalty, lam=lam,
+				                   solver=GradientDescent(
+					                   learning_rate=FixedLR(1e-4),
+					                   max_iter=20000)), X_train, y_train,
 				misclassification_error)[1]
-		# go.Figure(
-		# 	[go.Scatter(x=evaluation_range, y=errors, mode="lines+markers",
-		# 	            name="validation error")]).show()
 		minimizer = evaluation_range[np.argmin(errors)]
-		loss = LogisticRegression(penalty=penalty, lam=minimizer) \
+		loss = LogisticRegression(penalty=penalty, lam=minimizer,
+		                          solver=GradientDescent(
+			                          learning_rate=FixedLR(1e-4),
+			                          max_iter=20000)) \
 			.fit(X_train, y_train).loss(X_test, y_test)
 		print(
 			f"The minimizing lambda for {penalty} was {minimizer} and achieved a misclassification error of {loss}")

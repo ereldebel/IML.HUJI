@@ -34,7 +34,7 @@ class L2(BaseModule):
 		output: ndarray of shape (1,)
 			Value of function at point self.weights
 		"""
-		return np.dot(self.weights_, self.weights_)
+		return np.dot(self.weights, self.weights)
 
 	def compute_jacobian(self, **kwargs) -> np.ndarray:
 		"""
@@ -50,7 +50,7 @@ class L2(BaseModule):
 		output: ndarray of shape (n_in,)
 			L2 derivative with respect to self.weights at point self.weights
 		"""
-		return 2 * self.weights_
+		return 2 * self.weights
 
 
 class L1(BaseModule):
@@ -85,7 +85,7 @@ class L1(BaseModule):
 		output: ndarray of shape (1,)
 			Value of function at point self.weights
 		"""
-		return np.sum(np.abs(self.weights_))
+		return np.sum(np.abs(self.weights))
 
 	def compute_jacobian(self, **kwargs) -> np.ndarray:
 		"""
@@ -101,7 +101,7 @@ class L1(BaseModule):
 		output: ndarray of shape (n_in,)
 			L1 derivative with respect to self.weights at point self.weights
 		"""
-		return np.sign(self.weights_)
+		return np.sign(self.weights)
 
 
 class LogisticModule(BaseModule):
@@ -141,7 +141,7 @@ class LogisticModule(BaseModule):
 			Value of function at point self.weights
 			- (1/m) sum_i^m[y_i*<x_i,w> - log(1+exp(<x_i,w>))]
 		"""
-		X_dot_w = X @ self.weights_
+		X_dot_w = X @ self.weights
 		return -1 / X.shape[0] * np.sum(
 			y * X_dot_w - np.log(1 + np.exp(X_dot_w)))
 
@@ -165,7 +165,7 @@ class LogisticModule(BaseModule):
 		"""
 		return -1 / X.shape[0] * np.sum(
 			(y.T * X.T).T
-			- (X.T * (1 - 1 / (1 + np.exp(X @ self.weights_))).T).T, axis=0)
+			- (X.T * (1 - 1 / (1 + np.exp(X @ self.weights))).T).T, axis=0)
 
 
 class RegularizedModule(BaseModule):
@@ -223,13 +223,9 @@ class RegularizedModule(BaseModule):
 		output: ndarray of shape (1,)
 			Value of function at point self.weights
 		"""
-		result = self.fidelity_module_.compute_output(**kwargs)
+		fidelity_output = self.fidelity_module_.compute_output(**kwargs)
 		regularization_output = self.lam_ * self.regularization_module_.compute_output(**kwargs)
-		if len(result.shape) == 0 or result.shape[0] == regularization_output.shape[0]:
-			result += self.lam_ * regularization_output
-		else:
-			result[1:] += self.lam_ * regularization_output
-		return result
+		return fidelity_output + (self.lam_ * regularization_output)
 
 	def compute_jacobian(self, **kwargs) -> np.ndarray:
 		"""

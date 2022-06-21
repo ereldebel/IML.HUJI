@@ -94,11 +94,9 @@ class LogisticRegression(BaseEstimator):
 		if self.include_intercept_:
 			X = np.insert(X, 0, 1, axis=1)
 		n = X.shape[1]
-		module = LogisticModule(
-			np.random.multivariate_normal(np.zeros([n]), np.identity(n)))
+		weights = np.random.randn(n) / np.sqrt(n)
+		module = LogisticModule(weights)
 		if self.penalty_ != REGULARIZATION_TERM[0]:
-			weights = np.random.multivariate_normal(np.zeros([n]),
-			                                        np.identity(n))
 			module = RegularizedModule(module, L1() if
 			self.penalty_ == REGULARIZATION_TERM[1] else L2(),
 			                           self.lam_, weights,
